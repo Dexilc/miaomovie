@@ -1,31 +1,34 @@
 <!-- 城市列表 -->
 <template>
     <div class="cinema_body">
-        <ul>
-            <li v-for="item in cinemaList" :key="item.id">
-                <div>
-                    <span>{{ item.nm }}</span>
-                    <span class="q"
-                        ><span class="price">{{ item.sellPrice }}</span>
-                        元起</span
-                    >
-                </div>
-                <div class="address">
-                    <span>{{ item.addr }}</span>
-                    <span>{{ item.distance }}</span>
-                </div>
-                <div class="card">
-                    <div
-                        v-for="(num, key) in item.tag"
-                        v-if="num === 1"
-                        :key="key"
-                        :class="key | classCard"
-                    >
-                        {{ key | formatCard }}
+        <Loading v-if="isLoading" />
+        <Scroller v-else>
+            <ul>
+                <li v-for="item in cinemaList" :key="item.id">
+                    <div>
+                        <span>{{ item.nm }}</span>
+                        <span class="q"
+                            ><span class="price">{{ item.sellPrice }}</span>
+                            元起</span
+                        >
                     </div>
-                </div>
-            </li>
-        </ul>
+                    <div class="address">
+                        <span>{{ item.addr }}</span>
+                        <span>{{ item.distance }}</span>
+                    </div>
+                    <div class="card">
+                        <div
+                            v-for="(num, key) in item.tag"
+                            v-if="num === 1"
+                            :key="key"
+                            :class="key | classCard"
+                        >
+                            {{ key | formatCard }}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </Scroller>
     </div>
 </template>
 
@@ -43,7 +46,9 @@ export default {
     data () {
         //这里存放数据
         return {
-            cinemaList: []
+            cinemaList: [],
+            isLoading: true,
+            prevCityId: -1
         };
     },
     filters: {
@@ -77,7 +82,9 @@ export default {
         }
     },
     //监听属性 类似于data概念
-    computed: {},
+    computed: {
+
+    },
     //监控data中的数据变化
     watch: {},
     //方法集合
@@ -89,12 +96,19 @@ export default {
 
     },
     //生命周期 - 挂载完成（可以访问DOM元素）
-    mounted () {
-        this.axios.get('/api/cinemaList?cityId=10')
+    activated () {
+        var cityId = this.$store.state.city.id;
+        // 如果没切换id直接返回
+        if (this.prevCityId === cityId) { return }
+        // 切换id重新载入数据
+        this.isLoading = true;
+        this.axios.get('/api/cinemaList?cityId=' + cityId)
             .then(res => {
                 var msg = res.data.msg
                 if (msg === 'ok') {
+                    this.isLoading = false
                     this.cinemaList = res.data.data.cinemas
+                    this.prevCityId = cityId
                 }
 
             })

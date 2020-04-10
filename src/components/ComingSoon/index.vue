@@ -1,31 +1,34 @@
 <!--即将上映  -->
 <template>
     <div class="movie_body">
-        <ul>
-            <li v-for="item in comingList" :key="item.id">
-                <div class="pic_show">
-                    <img :src="item.img | setWH('128.180')" />
-                </div>
-                <div class="info_list">
-                    <h2>
-                        {{ item.nm
-                        }}<img
-                            v-if="item.version"
-                            src="@/assets/maxs.png"
-                            alt="3dImax"
-                        />
-                    </h2>
-                    <p>
-                        <span class="person">{{ item.wish }}</span> 人想看
-                    </p>
-                    <p>主演: {{ item.star }}</p>
-                    <p>{{ item.rt }}上映</p>
-                </div>
-                <div class="btn_pre">
-                    预售
-                </div>
-            </li>
-        </ul>
+        <Loading v-if="isLoading" />
+        <Scroller v-else>
+            <ul>
+                <li v-for="item in comingList" :key="item.id">
+                    <div class="pic_show">
+                        <img :src="item.img | setWH('128.180')" />
+                    </div>
+                    <div class="info_list">
+                        <h2>
+                            {{ item.nm
+                            }}<img
+                                v-if="item.version"
+                                src="@/assets/maxs.png"
+                                alt="3dImax"
+                            />
+                        </h2>
+                        <p>
+                            <span class="person">{{ item.wish }}</span> 人想看
+                        </p>
+                        <p>主演: {{ item.star }}</p>
+                        <p>{{ item.rt }}上映</p>
+                    </div>
+                    <div class="btn_pre">
+                        预售
+                    </div>
+                </li>
+            </ul>
+        </Scroller>
     </div>
 </template>
 
@@ -43,7 +46,9 @@ export default {
     data () {
         //这里存放数据
         return {
-            comingList: []
+            comingList: [],
+            isLoading: true,
+            prevCityId: -1
         };
     },
     //监听属性 类似于data概念
@@ -59,11 +64,18 @@ export default {
 
     },
     //生命周期 - 挂载完成（可以访问DOM元素）
-    mounted () {
-        this.axios.get('/api/moviecomingList?cityId=10').then((res) => {
+    activated () {
+        var cityId = this.$store.state.city.id;
+        // 如果没切换id直接返回
+        if (this.prevCityId === cityId) { return }
+        // 切换id重新载入数据
+        this.isLoading = true;
+        this.axios.get('/api/moviecomingList?cityId=' + cityId).then(res => {
             var msg = res.data.msg;
             if (msg === 'ok') {
                 this.comingList = res.data.data.comingList
+                this.isLoading = false
+                this.prevCityId = cityId
             }
         })
     },
