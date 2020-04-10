@@ -30,7 +30,7 @@
             </keep-alive>
         </div>
         <TabBar />
-        <!-- <MessageBox /> -->
+        <router-view name="detail"></router-view>
     </div>
 </template>
 
